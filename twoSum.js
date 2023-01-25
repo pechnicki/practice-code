@@ -6,29 +6,20 @@
  * @param {number[]} nums
  * @return {number[][]}
  */
-var threeSum = function (nums) {
-  if (nums.length < 3) {
+var twoSum = function (nums, target) {
+  if (nums.length < 2) {
     return [];
   }
   let result = [];
-  nums = nums.sort((a, b) => a - b);
   for (let i = 0; i < nums.length; i++) {
     if (i > 0 && nums[i] === nums[i - 1]) {
       continue;
     }
     let left = i + 1;
-    let right = nums.length - 1;
-    while (left < right) {
-      let sum = nums[i] + nums[left] + nums[right];
-      if (sum === 0) {
-        result.push([nums[i], nums[left], nums[right]]);
-        while (left < right && nums[left] === nums[left + 1]) {
-          left++;
-        }
-        left++;
-        right--;
-      } else if (sum > 0) {
-        right--;
+    while (left < nums.length) {
+      let sum = nums[i] + nums[left];
+      if (sum === target) {
+        return [i, left]
       } else {
         left++;
       }
@@ -37,9 +28,10 @@ var threeSum = function (nums) {
   return result;
 };
 
-//console.log(threeSum([-1, 0, 1, 2, -1]));
-//return;
-threeSum([
+console.log(twoSum([2, 7, 11, 15], 9));
+console.log(twoSum([3, 2, 4], 6));
+return;
+twoSum([
   82597, -9243, 62390, 83030, -97960, -26521, -61011, 83390, -38677, 12333,
   75987, 46091, 83794, 19355, -71037, -6242, -28801, 324, 1202, -90885, -2989,
   -95597, -34333, 35528, 5680, 89093, -90606, 50360, -29393, -27012, 53313,
