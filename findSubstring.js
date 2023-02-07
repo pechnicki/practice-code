@@ -3,54 +3,50 @@
  * @param {string[]} words
  * @return {number[]}
  */
-let wordLength = 0;
-let totalCount = 0;
+const doesStringContainAllWords = (string, words) => {
+  // If all words have been found
+  if (!words.length) return true;
 
-let search = function (s, wordCounts, i, used, matched) {
-  if (matched == totalCount) return true;
-  if (i >= s.length) return false;
+  // Loop through all words
+  for (let i = 0; i < words.length; i++) {
+    // Store the length of the target word (as it may be spliced)
+    const targetWordLength = words[i].length;
 
-  var testStr = s.substring(i, wordLength);
+    // Check if the word in question matches is found at the start of the string
+    if (string.substring(0, targetWordLength) === words[i]) {
+      // Remove the found word from the words array
+      words.splice(i, 1);
 
-  if (wordCounts.has(testStr)) {
-    // we found the test...
-    if (!used.has(testStr)) {
-      // we haven't found it before
-      used.set(testStr, 1);
-    } else if (used.get(testStr) < wordCounts.get(testStr)) {
-      // we have found it before, but we still have matches left
-      used.set(testStr, used.get(testStr) + 1);
-    } else {
-      // we haven't any matches left for that word
-      return false;
+      // Look for the remaining words in the rest of the string
+      return doesStringContainAllWords(
+        string.substring(targetWordLength),
+        words
+      );
     }
-    return search(s, wordCounts, i + wordLength, used, matched + 1); // continue searching
   }
+
+  // If no words were found in the current string
   return false;
 };
-
 var findSubstring = function (s, words) {
-  wordLength = words[0].length;
-  let wordCounts = new Map();
+  // Initialise an array to store our answers in
+  let answers = [];
 
-  // initialize wordCounts
-  totalCount = 0;
-  words.forEach((word) => {
-    if (wordCounts.has(word)) {
-      wordCounts.set(word, wordCounts.get(word) + 1);
-    } else {
-      wordCounts.set(word, 1);
-    }
-    totalCount++;
-  });
+  // Calculate the total length of the words
+  const totalLengthOfWords = words.reduce(
+    (total, word) => (total += word.length),
+    0
+  );
 
-  let result = [];
-  for (var i = 0; i < s.length; i++) {
-    if (search(s, wordCounts, i, new Map(), 0)) {
-      result.push(i);
+  // Loop through the string, until there is insufficient space left to find all words
+  for (let i = 0; i <= s.length - totalLengthOfWords; i++) {
+    // If the string from this point contains all target words, store the starting position
+    if (doesStringContainAllWords(s.substring(i), words.slice())) {
+      answers.push(i);
     }
   }
-  return result;
+
+  return answers;
 };
 
 console.log(
