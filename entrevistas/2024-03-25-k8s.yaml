@@ -1,0 +1,112 @@
+--- secrets.yaml
+apiVersion: v1
+kind: Secret
+metadata:
+  name: mysecrets
+type: Opaque
+data:
+  MYPASSWRD: MTIz # base64 encoded value of "123"
+stringData:
+  MYUSER: usuario
+
+--- deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: nginx
+  template:
+    metadata:
+      labels:
+        app: nginx
+    spec:
+      containers:
+      - name: nginx-container
+        image: nginx
+        ports:
+        - containerPort: 8080
+        env:
+        - name: MYPASSWRD
+          valueFrom:
+            secretKeyRef:
+              name: mysecrets
+              key: MYPASSWRD
+        - name: MYUSER
+          valueFrom:
+            secretKeyRef:
+              name: mysecrets
+              key: MYUSER
+        volumeMounts:
+        - name: config-volume
+          mountPath: "/mnt/myconfigs"
+      volumes:
+      - name: config-volume
+        emptyDir: {}
+      imagePullSecrets:
+      - name: myregistrykey
+      
+--- service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: nginx-service
+spec:
+  selector:
+    app: nginx
+  ports:
+  - protocol: TCP
+    port: 8080
+    targetPort: 8080
+  type: ClusterIP
+  
+--- autoscaling.yaml
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: nginx-hpa
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: nginx-deployment
+  minReplicas: 1
+  maxReplicas: 5
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 50
+  - type: Resource
+    resource:
+      name: memory
+      target:
+        type: Utilization
+        averageUtilization: 50
+        
+--- ingress.yaml 
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: nginx-ingress
+spec:
+  tls:
+  - hosts:
+    - domain
+    secretName: tls-secret-name
+  rules:
+  - host: domain
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: nginx-service
+            port:
+              number: 8080
